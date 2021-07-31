@@ -46,7 +46,8 @@ def handleImage(id, cutter=[]):
                     path.join(dir, 'problem.jpg'),
                     vec2=cutter)
     text = ocr.scan(path.join(dir, 'problem.jpg'))
-    return {'text': text, 'type': 'image'}
+    keyword = ocr.filter(text)
+    return {'text': text, 'keyword': keyword, 'type': 'image'}
 
 
 # 上传图片
@@ -80,7 +81,7 @@ def search(id):
     if id not in data:
         return flask.abort(404)
     if 'result' not in data[id]:
-        data[id]['result'] = spider.search(data[id]['text'])
+        data[id]['result'] = spider.search(data[id]['keyword'])
     return flask.jsonify(data[id]['result'])
 
 

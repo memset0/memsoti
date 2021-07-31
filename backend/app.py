@@ -1,29 +1,27 @@
 import os
-import yaml
 import flask
 import shutil
 import random
+from os import path
 
+import image
 import spider
+import configure
 
-dirname = os.path.dirname(__file__)
+dirname = path.dirname(__file__)
 
 app = flask.Flask(__name__)
-
-# 配置文件
-with open(os.path.join(dirname, '../config.yml'), encoding='utf8') as file:
-	config = yaml.load(file.read(), Loader=yaml.FullLoader)
-	file.close()
+config = configure.load()
 
 # 数据
 data = config['backend']['test_data'] if 'test_data' in config['backend'] else {}
 
 # 临时文件上传目录
-upload_folder = os.path.abspath(os.path.join(dirname, '..', config['backend']['upload_folder']))
+upload_folder = path.abspath(path.join(dirname, '..', config['backend']['upload_folder']))
 app.config['upload_folder'] = upload_folder
-if os.path.exists(upload_folder) and config['mode'] != 'development':
+if path.exists(upload_folder) and config['mode'] != 'development':
 	shutil.rmtree(upload_folder)
-if not os.path.exists(upload_folder):
+if not path.exists(upload_folder):
 	os.mkdir(upload_folder)
 
 # 上传图片
@@ -31,21 +29,21 @@ if not os.path.exists(upload_folder):
 def uploadImage():
 	file = flask.request.files['file']
 	id = random.sample(config['id_charset'], 8)
-	dist_dir = os.path.join(app.config['upload_folder'], id)
+	dist_dir = path.join(app.config['upload_folder'], id)
 	os.mkdir(dist_dir)
-	file.save(os.path.join(dist_dir, 'source.jpg'))
+	file.save(path.join(dist_dir, 'source.jpg'))
+	image.transform(path.join(dist_dir, 'source.jpg'), path.join(dist_dir, 'problem.jpg'))
 	text = '' # TODO: 图片处理 / OCR
-	file.save(os.path.join(dist_dir, 'problem.jpg'))
 	data[id] = {'text': text, 'type': 'image'}
 	return flask.jsonify({'code': 200, 'id': id, 'data': data[id]})
 
 # 查看图片
 @app.route('/view/image/<id>', methods=['GET'])
 def viewImage(id):
-	target_dir = os.path.join(app.config['upload_folder'], id)
+	target_dir = path.join(app.config['upload_folder'], id)
 	if not id in data:
 		return flask.abort(404)
-	with open(os.path.join(target_dir, 'problem.jpg'), 'rb') as file:
+	with open(path.join(target_dir, 'problem.jpg'), 'rb') as file:
 		image = file.read()
 		response = flask.Response(image, mimetype='image/jpg')
 		file.close()

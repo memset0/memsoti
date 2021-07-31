@@ -8,6 +8,7 @@ from flask import Flask, request
 import image
 import spider
 import configure
+from ocr import BaiduOCR
 
 dirname = path.dirname(__file__)
 
@@ -15,6 +16,7 @@ full_config = configure.load()
 config = full_config['backend']
 
 app = Flask(__name__)
+ocr = BaiduOCR(config)
 
 # 数据
 data = config['test_data'] if 'test_data' in config else {}
@@ -38,7 +40,7 @@ def uploadImage():
     file.save(path.join(dist_dir, 'source.jpg'))
     image.transform(path.join(dist_dir, 'source.jpg'),
                     path.join(dist_dir, 'problem.jpg'))
-    text = ''  # TODO: 图片处理 / OCR
+    text = ocr.scan(path.join(dist_dir, 'problem.jpg'))
     data[id] = {'text': text, 'type': 'image'}
     return flask.jsonify({'code': 200, 'id': id, 'data': data[id]})
 

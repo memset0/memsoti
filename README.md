@@ -10,5 +10,5 @@ cd frontend
 yarn install
 cd ..
 # 后端依赖
-pip install pyyaml baiduspider flask numpy opencv-python
+pip install pyyaml baiduspider flask numpy opencv-python baidu-aip
 ```
